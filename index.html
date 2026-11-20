@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ballers FC Team Generator</title>
+  <style>
+    /* ── Reset & base ── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --card: #22263a;
+      --border: #2e3350;
+      --accent: #4f8ef7;
+      --accent2: #7b5ef8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, .45);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #22263a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header .logo {
+      font-size: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-top: 2px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* ── Setup section ── */
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .setup-card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--accent);
+    }
+
+    /* Counter badges */
+    .counters {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .counter-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: .85rem;
+    }
+
+    .counter-badge .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-att {
+      background: var(--red);
+    }
+
+    .dot-mid {
+      background: var(--amber);
+    }
+
+    .dot-def {
+      background: var(--green);
+    }
+
+    .dot-total {
+      background: var(--accent);
+    }
+
+    .counter-badge span.num {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    /* ── Add player row ── */
+    .add-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .add-row input {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .add-row input:focus {
+      border-color: var(--accent);
+    }
+
+    .add-row select {
+      padding: 10px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+
+    .add-row select:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .1s, opacity .2s;
+    }
+
+    .btn:active {
+      transform: scale(.97);
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-clear {
+      background: var(--card);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-generate {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      letter-spacing: .3px;
+    }
+
+    .btn-generate:hover {
+      opacity: .9;
+    }
+
+    .btn-generate:active {
+      transform: scale(.98);
+    }
+
+    .btn-generate:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    /* ── Player list ── */
+    .player-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .player-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .player-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .player-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .player-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: .85rem;
+      animation: fadeIn .2s ease;
+    }
+
+    .player-chip .pos-badge {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .pos-ATT {
+      background: rgba(239, 68, 68, .2);
+      color: #f87171;
+    }
+
+    .pos-MID {
+      background: rgba(245, 158, 11, .2);
+      color: #fbbf24;
+    }
+
+    .pos-DEF {
+      background: rgba(34, 197, 94, .2);
+      color: #4ade80;
+    }
+
+    .player-chip .name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .player-chip .rm {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color .15s;
+    }
+
+    .player-chip .rm:hover {
+      color: var(--red);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ── Error / Info toast ── */
+    .toast {
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: .88rem;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .toast.error {
+      background: rgba(239, 68, 68, .15);
+      border: 1px solid rgba(239, 68, 68, .4);
+      color: #f87171;
+      display: block;
+    }
+
+    .toast.info {
+      background: rgba(79, 142, 247, .15);
+      border: 1px solid rgba(79, 142, 247, .4);
+      color: #93c5fd;
+      display: block;
+    }
+
+    /* ── Teams output ── */
+    #teams-section h2 span.team-count {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    #teams-section {
+      display: none;
+    }
+
+    #teams-section h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #teams-section h2 span {
+      font-size: 1.5rem;
+    }
+
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .team-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      animation: slideUp .35s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .team-header {
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .team-header .team-icon {
+      font-size: 1.4rem;
+    }
+
+    .team-body {
+      padding: 14px 18px;
+    }
+
+    .team-player {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      font-size: .9rem;
+    }
+
+    .team-player:last-child {
+      border-bottom: none;
+    }
+
+    .team-player .num {
+      width: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
+    .team-player .pname {
+      flex: 1;
+    }
+
+    .team-player .pbadge {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* team colour accents */
+    .tc-0 {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+
+    .tc-1 {
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+    }
+
+    .tc-2 {
+      background: linear-gradient(90deg, #22c55e, #10b981);
+    }
+
+    .tc-3 {
+      background: linear-gradient(90deg, #f59e0b, #eab308);
+    }
+
+    .tc-4 {
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    }
+
+    .tc-5 {
+      background: linear-gradient(90deg, #06b6d4, #3b82f6);
+    }
+
+    /* re-shuffle button */
+    .reshuffle-wrap {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .btn-reshuffle {
+      padding: 12px 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+
+    .btn-reshuffle:hover {
+      background: var(--card);
+    }
+
+    .btn-reshuffle:active {
+      transform: scale(.97);
+    }
+
+    /* ── Bulk import ── */
+    details {
+      margin-bottom: 20px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: .88rem;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    summary::before {
+      content: '▶';
+      font-size: .6rem;
+      transition: transform .2s;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .bulk-area {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bulk-area textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .85rem;
+      font-family: monospace;
+      resize: vertical;
+      outline: none;
+    }
+
+    .bulk-area textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .bulk-hint {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    /* Scrollbar for body on small screens */
+    @media (max-width: 600px) {
+      header {
+        padding: 16px;
+      }
+
+      .container {
+        padding: 16px;
+      }
+
+      .add-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">⚽</div>
+    <div>
+      <h1>Ballers FC Team Generator</h1>
+      <p>Split 7–36 players into teams of 6 (last team may be incomplete)</p>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ── Setup card ── -->
+    <div class="setup-card">
+      <h2>🧑‍🤝‍🧑 Add Players</h2>
+
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:14px;">
+        Add <strong style="color:var(--text)">7–36 players</strong> (minimum 7 to make 2 teams) — any position mix is fine.
+        Each team is filled with <strong style="color:var(--text)">6 players</strong> before the next is created;
+        only the last team may be incomplete.
+      </p>
+
+      <!-- Counters -->
+      <div class="counters">
+        <div class="counter-badge">
+          <div class="dot dot-att"></div>Attackers <span class="num" id="cnt-att">0</span>
+        </div>
+        <div class="counter-badge">
+          <div class="dot dot-mid"></div>Midfielders <span class="num" id="cnt-mid">0</span>
+        </div>
+        <div class="counter-badge">
+          <div class="dot dot-def"></div>Defenders <span class="num" id="cnt-def">0</span>
+        </div>
+        <div class="counter-badge">
+          <div class="dot dot-total"></div>Total <span class="num" id="cnt-total">0</span> &nbsp;<span id="cnt-hint"
+            style="color:var(--muted);font-size:.8rem;font-weight:400"></span>
+        </div>
+      </div>
+
+      <!-- Add single player -->
+      <div class="add-row">
+        <input id="player-name" type="text" placeholder="Player name" maxlength="40" autocomplete="off" />
+        <select id="player-pos">
+          <option value="ATT">⚡ Attacker</option>
+          <option value="MID">🔀 Midfielder</option>
+          <option value="DEF">🛡 Defender</option>
+        </select>
+        <button class="btn btn-add" onclick="addPlayer()">+ Add</button>
+        <button class="btn btn-clear" onclick="clearAll()">Clear All</button>
+      </div>
+
+      <!-- Bulk import -->
+      <details>
+        <summary>Bulk import players</summary>
+        <div class="bulk-area">
+          <p class="bulk-hint">
+            One player per line: <code>Name, Position</code> — position can be <code>ATT</code>, <code>MID</code>, or
+            <code>DEF</code> (case-insensitive).<br />
+            Example: <code>Lionel Messi, ATT</code>
+          </p>
+          <textarea id="bulk-text"
+            placeholder="Lionel Messi, ATT&#10;Kevin De Bruyne, MID&#10;Virgil van Dijk, DEF&#10;..."></textarea>
+          <button class="btn btn-add" style="align-self:flex-start" onclick="bulkImport()">Import</button>
+        </div>
+      </details>
+
+      <!-- Toast -->
+      <div class="toast" id="toast"></div>
+
+      <!-- Player chips -->
+      <div class="player-list" id="player-list"></div>
+
+      <!-- Generate button -->
+      <button class="btn-generate" id="gen-btn" onclick="generateTeams()" disabled>
+        🎲 Generate Teams
+      </button>
+    </div>
+
+    <!-- ── Teams output ── -->
+    <div id="teams-section">
+      <h2><span>🏆</span> Your Teams <span class="team-count" id="team-count-label"></span></h2>
+      <div class="teams-grid" id="teams-grid"></div>
+      <div class="reshuffle-wrap">
+        <button class="btn-reshuffle" onclick="generateTeams()">🔀 Re-shuffle Teams</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── State ── */
+    const players = [];
+    const TEAM_NAMES = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6'];
+    const TEAM_EMOJIS = ['🔴', '🔵', '🟢', '🟡', '🟣', '🩵'];
+
+    /* ── Helpers ── */
+    function counts() {
+      return {
+        ATT: players.filter(p => p.pos === 'ATT').length,
+        MID: players.filter(p => p.pos === 'MID').length,
+        DEF: players.filter(p => p.pos === 'DEF').length,
+      };
+    }
+
+    function updateCounters() {
+      const c = counts();
+      document.getElementById('cnt-att').textContent = c.ATT;
+      document.getElementById('cnt-mid').textContent = c.MID;
+      document.getElementById('cnt-def').textContent = c.DEF;
+      document.getElementById('cnt-total').textContent = players.length;
+
+      const n        = players.length;
+      const numTeams = Math.ceil(n / 6);
+      const fullTeams = Math.floor(n / 6);
+      const remainder = n % 6;
+      const isValid  = n >= 7 && n <= 36;
+      const btn      = document.getElementById('gen-btn');
+      const hint     = document.getElementById('cnt-hint');
+
+      btn.disabled = !isValid;
+
+      if (n === 0) {
+        hint.textContent = '(need at least 7 players for 2 teams)';
+        btn.textContent  = '🎲 Generate Teams';
+      } else if (n < 7) {
+        hint.textContent = `(need ${7 - n} more to form 2 teams)`;
+        btn.textContent  = '🎲 Generate Teams';
+      } else if (n > 36) {
+        hint.textContent = '(max 36 players)';
+        btn.textContent  = '🎲 Generate Teams';
+      } else {
+        if (remainder === 0) {
+          hint.textContent = `→ ${numTeams} full team${numTeams > 1 ? 's' : ''} of 6`;
+        } else {
+          hint.textContent = `→ ${fullTeams} team${fullTeams > 1 ? 's' : ''} of 6 + 1 team of ${remainder}`;
+        }
+        btn.textContent  = `🎲 Generate ${numTeams} Team${numTeams > 1 ? 's' : ''}`;
+      }
+    }
+
+    function showToast(msg, type = 'error') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type}`;
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.className = 'toast'; }, 4000);
+    }
+
+    function renderPlayers() {
+      const list = document.getElementById('player-list');
+      list.innerHTML = '';
+      players.forEach((p, i) => {
+        const chip = document.createElement('div');
+        chip.className = 'player-chip';
+        chip.innerHTML = `
+        <span class="pos-badge pos-${p.pos}">${p.pos}</span>
+        <span class="name" title="${p.name}">${p.name}</span>
+        <span class="rm" title="Remove" onclick="removePlayer(${i})">✕</span>
+      `;
+        list.appendChild(chip);
+      });
+      updateCounters();
+    }
+
+    /* ── Add / Remove ── */
+    function addPlayer(name, pos) {
+      name = (name ?? document.getElementById('player-name').value).trim();
+      pos = (pos ?? document.getElementById('player-pos').value);
+
+      if (!name) { showToast('Please enter a player name.'); return false; }
+      if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+        showToast(`"${name}" is already in the list.`); return false;
+      }
+      if (players.length >= 36) {
+        showToast('You already have 36 players (maximum).'); return false;
+      }
+
+      players.push({ name, pos });
+      renderPlayers();
+      if (!name && !pos) document.getElementById('player-name').value = '';
+      document.getElementById('player-name').value = '';
+      document.getElementById('player-name').focus();
+      return true;
+    }
+
+    function removePlayer(i) {
+      players.splice(i, 1);
+      renderPlayers();
+      // Hide teams if roster changes
+      document.getElementById('teams-section').style.display = 'none';
+    }
+
+    function clearAll() {
+      if (players.length && !confirm('Remove all players and start over?')) return;
+      players.length = 0;
+      renderPlayers();
+      document.getElementById('teams-section').style.display = 'none';
+    }
+
+    /* ── Bulk import ── */
+    function bulkImport() {
+      const raw = document.getElementById('bulk-text').value;
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      const posMap = {
+        att: 'ATT', attacker: 'ATT', mid: 'MID', midfielder: 'MID',
+        def: 'DEF', defender: 'DEF'
+      };
+      let added = 0, skipped = [];
+
+      for (const line of lines) {
+        const parts = line.split(',');
+        if (parts.length < 2) { skipped.push(line); continue; }
+        const name = parts.slice(0, -1).join(',').trim();
+        const rawPos = parts[parts.length - 1].trim().toLowerCase();
+        const pos = posMap[rawPos];
+        if (!pos) { skipped.push(line); continue; }
+        if (addPlayer(name, pos)) added++;
+      }
+
+      let msg = `Imported ${added} player${added !== 1 ? 's' : ''}.`;
+      if (skipped.length) msg += ` Skipped ${skipped.length} invalid line(s).`;
+      showToast(msg, 'info');
+      document.getElementById('bulk-text').value = '';
+    }
+
+    /* ── Shuffle util ── */
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    /* ── Generate teams ── */
+    function generateTeams() {
+      const n = players.length;
+      if (n < 7 || n > 36) {
+        showToast('Add between 7 and 36 players to generate at least 2 teams.'); return;
+      }
+
+      // Teams are filled in groups of 6; only the last team may have fewer than 6.
+      const numTeams = Math.ceil(n / 6);
+      const teamSizes = [];
+      for (let i = 0; i < numTeams; i++) {
+        if (i < numTeams - 1) {
+          teamSizes.push(6);
+        } else {
+          teamSizes.push(n % 6 === 0 ? 6 : n % 6);
+        }
+      }
+
+      // 1. Group players by position and shuffle each group independently
+      const byPos = {};
+      players.forEach(p => {
+        if (!byPos[p.pos]) byPos[p.pos] = [];
+        byPos[p.pos].push({ ...p });
+      });
+      Object.values(byPos).forEach(arr => shuffle(arr));
+
+      // 2. Proportional interleave — build one ordered sequence of N players
+      //    by always picking next from whichever position has the highest
+      //    "remaining / original" ratio (Bresenham-style).
+      //    A tiny random jitter breaks ties randomly so the result varies each run.
+      //    This balances positions evenly across each 6-player team in order.
+      const posKeys = Object.keys(byPos);
+      const originalCounts = {};
+      const ptrs = {};
+      posKeys.forEach(pos => { originalCounts[pos] = byPos[pos].length; ptrs[pos] = 0; });
+      const remaining = { ...originalCounts };
+
+      const ordered = [];
+      for (let i = 0; i < n; i++) {
+        let best = null, bestScore = -1;
+        for (const pos of posKeys) {
+          if (remaining[pos] > 0) {
+            const score = remaining[pos] / originalCounts[pos] + Math.random() * 1e-4;
+            if (score > bestScore) { bestScore = score; best = pos; }
+          }
+        }
+        ordered.push(byPos[best][ptrs[best]++]);
+        remaining[best]--;
+      }
+
+      // 3. Slice the interleaved list: Team 1 gets 6, Team 2 gets 6, etc.
+      //    The last team takes any remaining players.
+      let cursor = 0;
+      const teams = teamSizes.map((size, i) => ({
+        name:       TEAM_NAMES[i],
+        emoji:      TEAM_EMOJIS[i],
+        colorClass: `tc-${i}`,
+        size,
+        players:    ordered.slice(cursor, cursor += size),
+      }));
+
+      // Update heading
+      const remainder = n % 6;
+      const fullTeams = Math.floor(n / 6);
+      document.getElementById('team-count-label').textContent =
+        remainder === 0
+          ? `(${numTeams} teams · 6 players each)`
+          : `(${numTeams} teams · ${fullTeams} full of 6, last team has ${remainder})`;
+
+      renderTeams(teams);
+    }
+
+    /* ── Render teams ── */
+    function renderTeams(teams) {
+      const grid = document.getElementById('teams-grid');
+      grid.innerHTML = '';
+
+      teams.forEach((team, ti) => {
+        const card = document.createElement('div');
+        card.className = 'team-card';
+        card.style.animationDelay = `${ti * 60}ms`;
+
+        const posOrder = { ATT: 1, MID: 2, DEF: 3 };
+        const sorted = [...team.players].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]);
+
+        // Badge showing player count
+        const countBadge = `<span style="font-size:.78rem;font-weight:600;margin-left:auto;opacity:.9">${team.players.length}/6</span>`;
+
+        // Mark incomplete teams (fewer than 6)
+        const incomplete = team.players.length < 6;
+        const incompleteNote = incomplete
+          ? `<div style="padding:6px 18px 10px;font-size:.75rem;color:var(--amber);opacity:.9">⚠ Incomplete team (${team.players.length}/6 players)</div>`
+          : '';
+
+        card.innerHTML = `
+          <div class="team-header ${team.colorClass}">
+            <span class="team-icon">${team.emoji}</span>
+            <span>${team.name}</span>
+            ${countBadge}
+          </div>
+          <div class="team-body">
+            ${sorted.map((p, i) => `
+              <div class="team-player">
+                <span class="num">${i + 1}</span>
+                <span class="pname">${p.name}</span>
+                <span class="pbadge pos-${p.pos}">${p.pos}</span>
+              </div>
+            `).join('')}
+          </div>
+          ${incompleteNote}
+        `;
+        grid.appendChild(card);
+      });
+
+      const section = document.getElementById('teams-section');
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ── Keyboard shortcut: Enter to add player ── */
+    document.getElementById('player-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addPlayer();
+    });
+
+    /* init */
+    updateCounters();
+  </script>
+</body>
+
+</html>
