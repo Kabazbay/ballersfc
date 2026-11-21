@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ballers FC Team Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     /* ── Reset & base ── */
     *,
@@ -468,30 +469,78 @@
       background: linear-gradient(90deg, #06b6d4, #3b82f6);
     }
 
-    /* re-shuffle button */
-    .reshuffle-wrap {
-      text-align: center;
+    /* ── Export actions ── */
+    #teams-export-canvas {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .export-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .export-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .export-header h2 span {
+      font-size: 1.5rem;
+    }
+
+    .export-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
       margin-top: 24px;
     }
 
-    .btn-reshuffle {
-      padding: 12px 36px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
+    .btn-export {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #fff;
       font-size: .95rem;
       font-weight: 600;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background .2s, transform .1s;
+      transition: opacity .2s, transform .1s;
     }
 
-    .btn-reshuffle:hover {
+    .btn-export:hover {
+      opacity: .9;
+    }
+
+    .btn-export:active {
+      transform: scale(.97);
+    }
+
+    .btn-export.btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-export.btn-secondary:hover {
       background: var(--card);
     }
 
-    .btn-reshuffle:active {
-      transform: scale(.97);
+    .btn-export:disabled {
+      opacity: .5;
+      cursor: not-allowed;
     }
 
     /* ── Bulk import ── */
@@ -647,10 +696,21 @@
 
     <!-- ── Teams output ── -->
     <div id="teams-section">
-      <h2><span>🏆</span> Your Teams <span class="team-count" id="team-count-label"></span></h2>
-      <div class="teams-grid" id="teams-grid"></div>
-      <div class="reshuffle-wrap">
-        <button class="btn-reshuffle" onclick="generateTeams()">🔀 Re-shuffle Teams</button>
+      <div id="teams-export-canvas">
+        <div class="export-header">
+          <h2><span>🏆</span> Ballers FC Lineups</h2>
+          <span class="team-count" id="team-count-label"></span>
+        </div>
+        <div class="teams-grid" id="teams-grid"></div>
+      </div>
+
+      <div class="export-actions">
+        <button class="btn-export" id="btn-export-download" onclick="exportTeamsJpg('download')">
+          📥 Download JPG
+        </button>
+        <button class="btn-export btn-secondary" id="btn-export-share" onclick="exportTeamsJpg('share')" style="display: none;">
+          📲 Forward to Apps
+        </button>
       </div>
     </div>
 
@@ -920,6 +980,93 @@
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    /* ── Export to JPG ── */
+    async function exportTeamsJpg(mode = 'download') {
+      const exportElement = document.getElementById('teams-export-canvas');
+      const downloadBtn = document.getElementById('btn-export-download');
+      const shareBtn = document.getElementById('btn-export-share');
+
+      if (typeof html2canvas === 'undefined') {
+        showToast('Image library is still loading, please try again in a second.');
+        return;
+      }
+
+      const origText = downloadBtn.innerHTML;
+      downloadBtn.disabled = true;
+      downloadBtn.innerHTML = '⏳ Generating JPG...';
+      if (shareBtn) shareBtn.disabled = true;
+
+      try {
+        const canvas = await html2canvas(exportElement, {
+          backgroundColor: '#0f1117',
+          scale: 2, // High resolution crisp text
+          useCORS: true,
+          logging: false,
+          onclone: (clonedDoc) => {
+            // Remove CSS animations on cloned elements so render is instant and fully opaque
+            const cards = clonedDoc.querySelectorAll('.team-card');
+            cards.forEach(c => {
+              c.style.animation = 'none';
+              c.style.transform = 'none';
+              c.style.opacity = '1';
+            });
+          }
+        });
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            showToast('Failed to create image.');
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = origText;
+            if (shareBtn) shareBtn.disabled = false;
+            return;
+          }
+
+          const filename = `ballers-fc-teams-${new Date().toISOString().slice(0, 10)}.jpg`;
+          const file = new File([blob], filename, { type: 'image/jpeg' });
+
+          if (mode === 'share' && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'Ballers FC Teams',
+                text: 'Here are the teams for today!',
+                files: [file],
+              });
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                downloadBlob(blob, filename);
+              }
+            }
+          } else {
+            downloadBlob(blob, filename);
+          }
+
+          downloadBtn.disabled = false;
+          downloadBtn.innerHTML = origText;
+          if (shareBtn) shareBtn.disabled = false;
+        }, 'image/jpeg', 0.95);
+
+      } catch (err) {
+        console.error(err);
+        showToast('Error generating image.');
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = origText;
+        if (shareBtn) shareBtn.disabled = false;
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2500);
+      showToast('Teams exported as JPG!', 'info');
+    }
+
     /* ── Keyboard shortcut: Enter to add player ── */
     document.getElementById('player-name').addEventListener('keydown', e => {
       if (e.key === 'Enter') addPlayer();
@@ -927,6 +1074,15 @@
 
     /* init */
     updateCounters();
+    try {
+      if (navigator.canShare) {
+        const testFile = new File([''], 'test.jpg', { type: 'image/jpeg' });
+        if (navigator.canShare({ files: [testFile] })) {
+          const shareBtn = document.getElementById('btn-export-share');
+          if (shareBtn) shareBtn.style.display = 'inline-flex';
+        }
+      }
+    } catch (e) {}
   </script>
 </body>
 
